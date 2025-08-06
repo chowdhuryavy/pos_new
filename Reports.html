@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Sales Reports</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .reports-container {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        .filter-input {
+            padding: 0.8rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-label {
+            color: #7f8c8d;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .sales-card { border-left: 4px solid #27ae60; }
+        .profit-card { border-left: 4px solid #e74c3c; }
+        .transactions-card { border-left: 4px solid #3498db; }
+        .average-card { border-left: 4px solid #f39c12; }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .daily-sales-chart {
+            height: 300px;
+            display: flex;
+            align-items: end;
+            gap: 0.5rem;
+            padding: 1rem 0;
+        }
+
+        .bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            min-width: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .top-products {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s ease;
+        }
+
+        .product-item:hover {
+            background: #f8f9fa;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .product-stats {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.2rem;
+        }
+
+        .product-revenue {
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        .detailed-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #667eea;
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .export-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .table-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .no-data-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-cards {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="reports-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-icon">📊</div>
+            <h1 class="header-title">Sales Reports & Analytics</h1>
+            <p>Comprehensive business insights and performance metrics</p>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">📅 Start Date</label>
+                    <input type="date" class="filter-input" id="startDate">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">📅 End Date</label>
+                    <input type="date" class="filter-input" id="endDate">
+                </div>
+                <div class="filter-group">
+                    <button class="generate-btn" onclick="generateReport()" id="generateBtn">
+                        📈 Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards" id="summaryCards" style="display: none;">
+            <div class="summary-card sales-card">
+                <div class="card-icon">💰</div>
+                <div class="card-value" id="totalSales">$0.00</div>
+                <div class="card-label">Total Sales</div>
+            </div>
+            <div class="summary-card profit-card">
+                <div class="card-icon">📈</div>
+                <div class="card-value" id="totalProfit">$0.00</div>
+                <div class="card-label">Total Profit</div>
+            </div>
+            <div class="summary-card transactions-card">
+                <div class="card-icon">📄</div>
+                <div class="card-value" id="totalTransactions">0</div>
+                <div class="card-label">Transactions</div>
+            </div>
+            <div class="summary-card average-card">
+                <div class="card-icon">🎯</div>
+                <div class="card-value" id="averageOrder">$0.00</div>
+                <div class="card-label">Avg Order Value</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section" id="chartsSection" style="display: none;">
+            <div class="chart-container">
+                <h3 class="chart-title">📈 Daily Sales Trend</h3>
+                <div class="daily-sales-chart" id="dailySalesChart">
+                    <div class="no-data">
+                        <div class="no-data-icon">📊</div>
+                        <div>No data to display</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="chart-title">🏆 Top Selling Products</h3>
+                <div class="top-products" id="topProducts">
+                    <div class="no-data">
+                        <div class="no-data-icon">📦</div>
+                        <div>No products to display</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Table -->
+        <div class="detailed-table" id="detailedTable" style="display: none;">
+            <div class="table-header">
+                <h3>📋 Detailed Sales Data</h3>
+                <button class="export-btn" onclick="exportData()">📥 Export CSV</button>
+            </div>
+            <div class="table-content">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Revenue</th>
+                            <th>Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loadingState" style="display: none;">
+            <div class="spinner"></div>
+            <div>Generating report...</div>
+        </div>
+
+        <!-- No Data State -->
+        <div class="no-data" id="noDataState" style="display: none;">
+            <div class="no-data-icon">📊</div>
+            <div>No sales data found for the selected date range</div>
+            <div style="font-size: 0.9rem; color: #999; margin-top: 0.5rem;">
+                Try selecting a different date range
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentReportData = null;
+
+        // Initialize reports
+        document.addEventListener('DOMContentLoaded', function() {
+            setDefaultDates();
+        });
+
+        function setDefaultDates() {
+            const today = new Date();
+            const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('endDate').valueAsDate = today;
+            document.getElementById('startDate').valueAsDate = lastWeek;
+        }
+
+        async function generateReport() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('Start date cannot be after end date');
+                return;
+            }
+
+            showLoadingState();
+
+            try {
+                const reportData = await new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(resolve)
+                        .withFailureHandler(reject)
+                        .generateSalesReport(startDate, endDate);
+                });
+
+                if (reportData.success) {
+                    currentReportData = reportData.data;
+                    displayReport(reportData.data);
+                } else {
+                    showNoDataState();
+                    alert('Error generating report: ' + reportData.message);
+                }
+            } catch (error) {
+                console.error('Error generating report:', error);
+                showNoDataState();
+                alert('Failed to generate report. Please try again.');
+            }
+        }
+
+        function showLoadingState() {
+            hideAllSections();
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('generateBtn').textContent = '⏳ Generating...';
+        }
+
+        function hideAllSections() {
+            document.getElementById('summaryCards').style.display = 'none';
+            document.getElementById('chartsSection').style.display = 'none';
+            document.getElementById('detailedTable').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('noDataState').style.display = 'none';
+        }
+
+        function showNoDataState() {
+            hideAllSections();
+            document.getElementById('noDataState').style.display = 'block';
+            resetGenerateButton();
+        }
+
+        function resetGenerateButton() {
+            document.getElementById('generateBtn').disabled = false;
+            document.getElementById('generateBtn').textContent = '📈 Generate Report';
+        }
+
+        function displayReport(data) {
+            hideAllSections();
+            resetGenerateButton();
+
+            if (data.totalSales === 0) {
+                showNoDataState();
+                return;
+            }
+
+            // Show all sections
+            document.getElementById('summaryCards').style.display = 'grid';
+            document.getElementById('chartsSection').style.display = 'grid';
+            document.getElementById('detailedTable').style.display = 'block';
+
+            // Update summary cards
+            updateSummaryCards(data);
+            
+            // Update charts
+            updateDailySalesChart(data.dailySales);
+            updateTopProducts(data.productSales);
+            
+            // Update detailed table
+            updateDetailedTable(data);
+        }
+
+        function updateSummaryCards(data) {
+            document.getElementById('totalSales').textContent = '$' + data.totalSales.toFixed(2);
+            document.getElementById('totalProfit').textContent = '$' + data.totalProfit.toFixed(2);
+            document.getElementById('totalTransactions').textContent = data.transactionCount;
+            
+            const avgOrder = data.transactionCount > 0 ? data.totalSales / data.transactionCount : 0;
+            document.getElementById('averageOrder').textContent = '$' + avgOrder.toFixed(2);
+        }
+
+        function updateDailySalesChart(dailySales) {
+            const chartContainer = document.getElementById('dailySalesChart');
+            
+            if (!dailySales || Object.keys(dailySales).length === 0) {
+                chartContainer.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">📊</div>
+                        <div>No daily sales data</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const maxSales = Math.max(...Object.values(dailySales));
+            const dates = Object.keys(dailySales).sort();
+            
+            let html = '';
+            dates.forEach(date => {
+                const sales = dailySales[date];
+                const height = maxSales > 0 ? (sales / maxSales) * 250 : 0;
+                const formattedDate = new Date(date).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                html += `
+                    <div class="bar" style="height: ${height}px;" title="$${sales.toFixed(2)}">
+                        <div class="bar-value">$${sales.toFixed(0)}</div>
+                        <div class="bar-label">${formattedDate}</div>
+                    </div>
+                `;
+            });
+            
+            chartContainer.innerHTML = html;
+        }
+
+        function updateTopProducts(productSales) {
+            const container = document.getElementById('topProducts');
+            
+            if (!productSales || Object.keys(productSales).length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">📦</div>
+                        <div>No product sales data</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort products by revenue
+            const sortedProducts = Object.entries(productSales)
+                .sort((a, b) => b[1].revenue - a[1].revenue)
+                .slice(0, 10); // Top 10 products
+
+            let html = '';
+            sortedProducts.forEach(([productName, data]) => {
+                html += `
+                    <div class="product-item">
+                        <div class="product-info">
+                            <div class="product-name">${productName}</div>
+                            <div class="product-stats">Qty: ${data.quantity} units</div>
+                        </div>
+                        <div class="product-revenue">$${data.revenue.toFixed(2)}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateDetailedTable(data) {
+            const tbody = document.getElementById('salesTableBody');
+            
+            // This would typically show individual transaction data
+            // For now, we'll show aggregated product data
+            let html = '';
+            
+            if (data.productSales && Object.keys(data.productSales).length > 0) {
+                Object.entries(data.productSales).forEach(([productName, productData]) => {
+                    // Calculate average unit price
+                    const avgUnitPrice = productData.quantity > 0 ? productData.revenue / productData.quantity : 0;
+                    const estimatedProfit = productData.revenue * 0.3; // Assuming 30% profit margin
+                    
+                    html += `
+                        <tr>
+                            <td>${new Date().toLocaleDateString()}</td>
+                            <td>${productName}</td>
+                            <td>${productData.quantity}</td>
+                            <td>$${avgUnitPrice.toFixed(2)}</td>
+                            <td>$${productData.revenue.toFixed(2)}</td>
+                            <td>$${estimatedProfit.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #666; font-style: italic;">
+                            No detailed sales data available
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            tbody.innerHTML = html;
+        }
+
+        function exportData() {
+            if (!currentReportData) {
+                alert('No data to export. Please generate a report first.');
+                return;
+            }
+
+            let csvContent = "Date,Product,Quantity,Unit Price,Revenue,Profit\n";
+            
+            if (currentReportData.productSales) {
+                Object.entries(currentReportData.productSales).forEach(([productName, data]) => {
+                    const avgUnitPrice = data.quantity > 0 ? data.revenue / data.quantity : 0;
+                    const estimatedProfit = data.revenue * 0.3;
+                    
+                    csvContent += `${new Date().toLocaleDateString()},"${productName}",${data.quantity},$${avgUnitPrice.toFixed(2)},$${data.revenue.toFixed(2)},$${estimatedProfit.toFixed(2)}\n`;
+                });
+            }
+
+            // Create and download the file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `sales_report_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

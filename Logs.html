@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 System Logs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .logs-container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        .filter-select {
+            padding: 0.8rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .logs-table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #667eea;
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-count {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .table-content {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .logs-table th,
+        .logs-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .logs-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logs-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .log-date {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .log-user {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .log-action {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .action-login { background: #d4edda; color: #155724; }
+        .action-logout { background: #f8d7da; color: #721c24; }
+        .action-sale { background: #d1ecf1; color: #0c5460; }
+        .action-settings { background: #fff3cd; color: #856404; }
+        .action-user { background: #e2e3e5; color: #383d41; }
+        .action-system { background: #f0d0ff; color: #6f42c1; }
+
+        .log-details {
+            font-size: 0.9rem;
+            color: #666;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-logs {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .no-logs-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .auto-refresh input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .auto-refresh label {
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logs-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-icon">📋</div>
+            <h1 class="header-title">System Logs</h1>
+            <p>Monitor system activities and user actions</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-cards" id="statsCards">
+            <div class="stat-card">
+                <div class="stat-value" id="totalLogs">0</div>
+                <div class="stat-label">Total Logs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="todayLogs">0</div>
+                <div class="stat-label">Today's Logs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="activeUsers">0</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="errorCount">0</div>
+                <div class="stat-label">Error Count</div>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">👤 Filter by User</label>
+                    <select class="filter-select" id="userFilter">
+                        <option value="">All Users</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">⚡ Filter by Action</label>
+                    <select class="filter-select" id="actionFilter">
+                        <option value="">All Actions</option>
+                        <option value="Login">Login</option>
+                        <option value="Logout">Logout</option>
+                        <option value="Sale">Sale</option>
+                        <option value="Settings">Settings</option>
+                        <option value="User Management">User Management</option>
+                        <option value="System Setup">System Setup</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">📅 Time Period</label>
+                    <select class="filter-select" id="timeFilter">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button class="refresh-btn" onclick="loadLogs()" id="refreshBtn">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <div class="auto-refresh">
+                    <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+                    <label for="autoRefresh">Auto-refresh every 30 seconds</label>
+                </div>
+                <div style="font-size: 0.9rem; color: #666;">
+                    Last updated: <span id="lastUpdated">Never</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="logs-table-container">
+            <div class="table-header">
+                <h3>📄 Recent Activities</h3>
+                <div class="log-count" id="logCount">Loading logs...</div>
+            </div>
+            <div class="table-content">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>📅 Date & Time</th>
+                            <th>👤 User</th>
+                            <th>⚡ Action</th>
+                            <th>📝 Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <tr>
+                            <td colspan="4">
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    <div>Loading system logs...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allLogs = [];
+        let autoRefreshInterval = null;
+
+        // Initialize logs view
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLogs();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Filter change events
+            document.getElementById('userFilter').addEventListener('change', filterLogs);
+            document.getElementById('actionFilter').addEventListener('change', filterLogs);
+            document.getElementById('timeFilter').addEventListener('change', filterLogs);
+        }
+
+        async function loadLogs() {
+            try {
+                const refreshBtn = document.getElementById('refreshBtn');
+                refreshBtn.disabled = true;
+                refreshBtn.textContent = '⏳ Loading...';
+
+                const logs = await new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(resolve)
+                        .withFailureHandler(reject)
+                        .getRecentLogs(200); // Get last 200 logs
+                });
+
+                allLogs = logs || [];
+                updateStats();
+                populateUserFilter();
+                filterLogs();
+                updateLastUpdated();
+
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                showNoLogsMessage('Failed to load logs');
+            } finally {
+                const refreshBtn = document.getElementById('refreshBtn');
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '🔄 Refresh';
+            }
+        }
+
+        function updateStats() {
+            const today = new Date().toDateString();
+            const todayLogs = allLogs.filter(log => 
+                new Date(log.date).toDateString() === today
+            );
+            
+            const uniqueUsers = [...new Set(allLogs.map(log => log.user))];
+            const errorLogs = allLogs.filter(log => 
+                log.action.toLowerCase().includes('error') || 
+                log.action.toLowerCase().includes('failed')
+            );
+
+            document.getElementById('totalLogs').textContent = allLogs.length;
+            document.getElementById('todayLogs').textContent = todayLogs.length;
+            document.getElementById('activeUsers').textContent = uniqueUsers.length;
+            document.getElementById('errorCount').textContent = errorLogs.length;
+        }
+
+        function populateUserFilter() {
+            const userFilter = document.getElementById('userFilter');
+            const uniqueUsers = [...new Set(allLogs.map(log => log.user))];
+            
+            // Clear existing options except "All Users"
+            userFilter.innerHTML = '<option value="">All Users</option>';
+            
+            uniqueUsers.forEach(user => {
+                if (user && user !== 'System') {
+                    const option = document.createElement('option');
+                    option.value = user;
+                    option.textContent = user;
+                    userFilter.appendChild(option);
+                }
+            });
+        }
+
+        function filterLogs() {
+            const userFilter = document.getElementById('userFilter').value;
+            const actionFilter = document.getElementById('actionFilter').value;
+            const timeFilter = document.getElementById('timeFilter').value;
+
+            let filteredLogs = allLogs;
+
+            // Filter by user
+            if (userFilter) {
+                filteredLogs = filteredLogs.filter(log => log.user === userFilter);
+            }
+
+            // Filter by action
+            if (actionFilter) {
+                filteredLogs = filteredLogs.filter(log => 
+                    log.action.toLowerCase().includes(actionFilter.toLowerCase())
+                );
+            }
+
+            // Filter by time
+            if (timeFilter !== 'all') {
+                const now = new Date();
+                let cutoffDate;
+                
+                switch(timeFilter) {
+                    case 'today':
+                        cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                        break;
+                    case 'week':
+                        cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        break;
+                    case 'month':
+                        cutoffDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                        break;
+                }
+                
+                if (cutoffDate) {
+                    filteredLogs = filteredLogs.filter(log => 
+                        new Date(log.date) >= cutoffDate
+                    );
+                }
+            }
+
+            displayLogs(filteredLogs);
+        }
+
+        function displayLogs(logs) {
+            const tbody = document.getElementById('logsTableBody');
+            const logCount = document.getElementById('logCount');
+
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            <div class="no-logs">
+                                <div class="no-logs-icon">📋</div>
+                                <div>No logs found matching the current filters</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                logCount.textContent = 'No logs found';
+                return;
+            }
+
+            logCount.textContent = `Showing ${logs.length} log${logs.length !== 1 ? 's' : ''}`;
+
+            let html = '';
+            logs.forEach(log => {
+                const date = new Date(log.date);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                const actionClass = getActionClass(log.action);
+
+                html += `
+                    <tr>
+                        <td class="log-date">${formattedDate}</td>
+                        <td class="log-user">${log.user || 'Unknown'}</td>
+                        <td>
+                            <span class="log-action ${actionClass}">
+                                ${log.action}
+                            </span>
+                        </td>
+                        <td class="log-details">${log.details || 'No details'}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function getActionClass(action) {
+            const actionLower = action.toLowerCase();
+            
+            if (actionLower.includes('login')) return 'action-login';
+            if (actionLower.includes('logout')) return 'action-logout';
+            if (actionLower.includes('sale')) return 'action-sale';
+            if (actionLower.includes('settings')) return 'action-settings';
+            if (actionLower.includes('user')) return 'action-user';
+            if (actionLower.includes('system')) return 'action-system';
+            
+            return 'action-system';
+        }
+
+        function showNoLogsMessage(message) {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        <div class="no-logs">
+                            <div class="no-logs-icon">⚠️</div>
+                            <div>${message}</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('logCount').textContent = 'Error loading logs';
+        }
+
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(loadLogs, 30000); // 30 seconds
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('lastUpdated').textContent = timeString;
+        }
+
+        // Cleanup interval when page unloads
+        window.addEventListener('beforeunload', function() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>
