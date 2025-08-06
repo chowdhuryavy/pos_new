@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏠 POS Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            padding: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+            animation: slideInDown 0.6s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .header-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .user-info {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .role-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .admin-role { background: #ff6b6b; }
+        .manager-role { background: #4ecdc4; }
+        .cashier-role { background: #45b7d1; }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+            animation: slideInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .metric-card:nth-child(1) { animation-delay: 0.1s; }
+        .metric-card:nth-child(2) { animation-delay: 0.2s; }
+        .metric-card:nth-child(3) { animation-delay: 0.3s; }
+        .metric-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .metric-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: #7f8c8d;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .sales-metric { border-left: 4px solid #27ae60; }
+        .transactions-metric { border-left: 4px solid #3498db; }
+        .profit-metric { border-left: 4px solid #e74c3c; }
+        .product-metric { border-left: 4px solid #f39c12; }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #495057;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .low-stock-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stock-item-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .stock-item-level {
+            color: #e53e3e;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="header-icon">🏠</div>
+            <h1 class="header-title">POS Dashboard</h1>
+            <p class="header-subtitle">Real-time business insights and control center</p>
+            
+            <div class="user-info">
+                <div class="user-details">
+                    <span>👋 Welcome, <strong id="userName">Loading...</strong></span>
+                </div>
+                <div>
+                    <span class="role-badge" id="userRole">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+            <div class="metric-card sales-metric">
+                <div class="metric-icon">💰</div>
+                <div class="metric-value" id="todaySales">$0.00</div>
+                <div class="metric-label">Today's Sales</div>
+            </div>
+            
+            <div class="metric-card transactions-metric">
+                <div class="metric-icon">📄</div>
+                <div class="metric-value" id="todayTransactions">0</div>
+                <div class="metric-label">Transactions</div>
+            </div>
+            
+            <div class="metric-card profit-metric">
+                <div class="metric-icon">📈</div>
+                <div class="metric-value" id="todayProfit">$0.00</div>
+                <div class="metric-label">Today's Profit</div>
+            </div>
+            
+            <div class="metric-card product-metric">
+                <div class="metric-icon">🏆</div>
+                <div class="metric-value" id="bestProduct">N/A</div>
+                <div class="metric-label">Best Seller</div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Quick Actions -->
+            <div class="section">
+                <h2 class="section-title">⚡ Quick Actions</h2>
+                <div class="quick-actions">
+                    <div class="action-btn" onclick="openPOS()">
+                        🛒 New Sale
+                    </div>
+                    <div class="action-btn" onclick="openInventory()" id="inventoryBtn">
+                        📦 Inventory
+                    </div>
+                    <div class="action-btn" onclick="openReports()" id="reportsBtn">
+                        📊 Reports
+                    </div>
+                    <div class="action-btn" onclick="openSettings()" id="settingsBtn">
+                        ⚙️ Settings
+                    </div>
+                    <div class="action-btn" onclick="openUserManagement()" id="usersBtn">
+                        👥 Users
+                    </div>
+                    <div class="action-btn" onclick="openLogs()" id="logsBtn">
+                        📋 System Logs
+                    </div>
+                </div>
+            </div>
+
+            <!-- Low Stock Alerts -->
+            <div class="section">
+                <h2 class="section-title">⚠️ Low Stock Alerts</h2>
+                <div id="lowStockContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div>Loading stock levels...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Sections for Admin/Manager -->
+        <div class="section" id="systemStatus" style="display: none;">
+            <h2 class="section-title">🔧 System Status</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div style="text-align: center; padding: 1rem; background: #e8f5e8; border-radius: 8px;">
+                    <div style="font-size: 1.5rem; color: #28a745;">✅</div>
+                    <div><strong>Database</strong></div>
+                    <div style="color: #666;">Connected</div>
+                </div>
+                <div style="text-align: center; padding: 1rem; background: #e8f5e8; border-radius: 8px;">
+                    <div style="font-size: 1.5rem; color: #28a745;">✅</div>
+                    <div><strong>Sheets API</strong></div>
+                    <div style="color: #666;">Active</div>
+                </div>
+                <div style="text-align: center; padding: 1rem; background: #e8f5e8; border-radius: 8px;">
+                    <div style="font-size: 1.5rem; color: #28a745;">✅</div>
+                    <div><strong>Security</strong></div>
+                    <div style="color: #666;">Protected</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refresh Button -->
+    <button class="refresh-btn" onclick="refreshDashboard()" title="Refresh Dashboard">
+        🔄
+    </button>
+
+    <script>
+        let dashboardData = null;
+        let userRole = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+
+        async function loadDashboardData() {
+            try {
+                const data = await new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(resolve)
+                        .withFailureHandler(reject)
+                        .getDashboardData();
+                });
+
+                dashboardData = data;
+                userRole = data.user.role;
+                updateDashboard(data);
+                updateUIBasedOnRole(data.user.role);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showErrorMessage('Failed to load dashboard data');
+            }
+        }
+
+        function updateDashboard(data) {
+            // Update user info
+            document.getElementById('userName').textContent = data.user.email || 'Unknown User';
+            
+            const roleElement = document.getElementById('userRole');
+            roleElement.textContent = data.user.role || 'No Role';
+            roleElement.className = `role-badge ${(data.user.role || '').toLowerCase()}-role`;
+
+            // Update metrics
+            document.getElementById('todaySales').textContent = '$' + data.todaySales;
+            document.getElementById('todayTransactions').textContent = data.todayTransactions;
+            document.getElementById('todayProfit').textContent = '$' + data.todayProfit;
+            document.getElementById('bestProduct').textContent = data.bestSellingProduct;
+
+            // Update low stock alerts
+            updateLowStockAlerts(data.lowStockItems);
+        }
+
+        function updateLowStockAlerts(lowStockItems) {
+            const container = document.getElementById('lowStockContainer');
+            
+            if (!lowStockItems || lowStockItems.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        ✅ All products are well-stocked!
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="low-stock-list">';
+            lowStockItems.forEach(item => {
+                html += `
+                    <div class="stock-item">
+                        <div>
+                            <div class="stock-item-name">${item.productName}</div>
+                            <div style="font-size: 0.8rem; color: #666;">${item.productId}</div>
+                        </div>
+                        <div class="stock-item-level">
+                            ${item.currentStock}/${item.reorderLevel}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+
+        function updateUIBasedOnRole(role) {
+            const inventoryBtn = document.getElementById('inventoryBtn');
+            const reportsBtn = document.getElementById('reportsBtn');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const usersBtn = document.getElementById('usersBtn');
+            const logsBtn = document.getElementById('logsBtn');
+            const systemStatus = document.getElementById('systemStatus');
+
+            // Show/hide buttons based on role
+            switch(role) {
+                case 'Admin':
+                    // Admin can see everything
+                    systemStatus.style.display = 'block';
+                    break;
+                case 'Manager':
+                    // Manager can't see user management, settings, or logs
+                    settingsBtn.style.display = 'none';
+                    usersBtn.style.display = 'none';
+                    logsBtn.style.display = 'none';
+                    break;
+                case 'Cashier':
+                    // Cashier can only see basic functions
+                    inventoryBtn.style.display = 'none';
+                    reportsBtn.style.display = 'none';
+                    settingsBtn.style.display = 'none';
+                    usersBtn.style.display = 'none';
+                    logsBtn.style.display = 'none';
+                    break;
+            }
+        }
+
+        function refreshDashboard() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            refreshBtn.style.transform = 'rotate(360deg)';
+            
+            setTimeout(() => {
+                refreshBtn.style.transform = 'rotate(0deg)';
+            }, 600);
+            
+            loadDashboardData();
+        }
+
+        // Quick action functions
+        function openPOS() {
+            google.script.run.showPOSInterface();
+        }
+
+        function openInventory() {
+            // Navigate to inventory sheet or open inventory dialog
+            SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Inventory').activate();
+        }
+
+        function openReports() {
+            google.script.run.showReports();
+        }
+
+        function openSettings() {
+            // Navigate to settings sheet
+            SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Settings').activate();
+        }
+
+        function openUserManagement() {
+            // Navigate to users sheet
+            SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Users').activate();
+        }
+
+        function openLogs() {
+            google.script.run.showLogs();
+        }
+
+        function showErrorMessage(message) {
+            const container = document.querySelector('.dashboard-container');
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                background: #f8d7da;
+                color: #721c24;
+                padding: 1rem;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+                border: 1px solid #f1aeb5;
+            `;
+            errorDiv.textContent = '❌ ' + message;
+            container.insertBefore(errorDiv, container.firstChild);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(loadDashboardData, 300000);
+    </script>
+</body>
+</html>
