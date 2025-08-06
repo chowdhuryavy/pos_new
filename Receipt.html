@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧾 Receipt</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #f5f5f5;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .receipt-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .receipt-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .receipt-header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+        }
+
+        .store-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .store-tagline {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .store-info {
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .receipt-body {
+            padding: 2rem 1.5rem 1rem;
+        }
+
+        .receipt-number {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #667eea;
+        }
+
+        .receipt-number-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .receipt-number-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        .transaction-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .customer-info {
+            margin-bottom: 2rem;
+        }
+
+        .customer-name {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            padding: 0.5rem;
+            background: #e8f0fe;
+            border-radius: 4px;
+        }
+
+        .items-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #667eea;
+            margin-bottom: 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .section-title::before,
+        .section-title::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30%;
+            height: 1px;
+            background: #667eea;
+        }
+
+        .section-title::before {
+            left: 0;
+        }
+
+        .section-title::after {
+            right: 0;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+
+        .items-table th {
+            background: #f8f9fa;
+            padding: 0.5rem 0.3rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #667eea;
+            color: #333;
+        }
+
+        .items-table td {
+            padding: 0.5rem 0.3rem;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-name {
+            font-weight: bold;
+        }
+
+        .item-qty {
+            text-align: center;
+        }
+
+        .item-price,
+        .item-total {
+            text-align: right;
+        }
+
+        .totals-section {
+            border-top: 2px dashed #667eea;
+            padding-top: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 0;
+            font-size: 0.9rem;
+        }
+
+        .total-row.subtotal {
+            color: #666;
+        }
+
+        .total-row.discount {
+            color: #e74c3c;
+        }
+
+        .total-row.tax {
+            color: #f39c12;
+        }
+
+        .total-row.final {
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-top: 2px solid #333;
+            padding-top: 0.8rem;
+            margin-top: 0.5rem;
+            color: #333;
+        }
+
+        .payment-info {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #e8f5e8;
+            border-radius: 6px;
+        }
+
+        .payment-method {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-status {
+            font-size: 0.8rem;
+            color: #27ae60;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .footer-section {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-top: 2px dashed #667eea;
+        }
+
+        .thank-you {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+
+        .footer-info {
+            font-size: 0.7rem;
+            line-height: 1.4;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .barcode {
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .barcode-lines {
+            display: inline-block;
+            background: repeating-linear-gradient(
+                90deg,
+                #000 0px,
+                #000 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            height: 40px;
+            width: 200px;
+            margin-bottom: 0.5rem;
+        }
+
+        .barcode-number {
+            font-size: 0.7rem;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+            color: #333;
+        }
+
+        .print-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .print-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .print-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .print-btn.secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .warranty-info {
+            font-size: 0.7rem;
+            color: #666;
+            text-align: center;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: #fff3cd;
+            border-radius: 4px;
+            border-left: 4px solid #ffc107;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .receipt-container {
+                box-shadow: none;
+                max-width: none;
+                margin: 0;
+            }
+            
+            .print-buttons {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .receipt-container {
+                max-width: 100%;
+            }
+            
+            .transaction-details {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <!-- Header -->
+        <div class="receipt-header">
+            <div class="store-name">🏪 POS SYSTEM</div>
+            <div class="store-tagline">Professional Point of Sale</div>
+            <div class="store-info">
+                123 Business Street, Suite 100<br>
+                City, State 12345<br>
+                📞 (555) 123-4567 | 📧 info@possystem.com<br>
+                🌐 www.possystem.com
+            </div>
+        </div>
+
+        <!-- Receipt Body -->
+        <div class="receipt-body">
+            <!-- Receipt Number -->
+            <div class="receipt-number">
+                <div class="receipt-number-label">Receipt Number</div>
+                <div class="receipt-number-value" id="receiptNumber">Loading...</div>
+            </div>
+
+            <!-- Transaction Details -->
+            <div class="transaction-details">
+                <div class="detail-item">
+                    <div class="detail-label">📅 Date</div>
+                    <div class="detail-value" id="transactionDate">Loading...</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">🕐 Time</div>
+                    <div class="detail-value" id="transactionTime">Loading...</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">👤 Cashier</div>
+                    <div class="detail-value" id="cashierName">Loading...</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">🆔 Transaction ID</div>
+                    <div class="detail-value" id="transactionId">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Customer Info -->
+            <div class="customer-info">
+                <div class="customer-name" id="customerName">Walk-in Customer</div>
+            </div>
+
+            <!-- Items Section -->
+            <div class="items-section">
+                <div class="section-title">📦 Items Purchased</div>
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <!-- Items will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Totals Section -->
+            <div class="totals-section">
+                <div class="total-row subtotal">
+                    <span>Subtotal:</span>
+                    <span id="subtotalAmount">$0.00</span>
+                </div>
+                <div class="total-row discount">
+                    <span>Discount (<span id="discountPercent">0</span>%):</span>
+                    <span id="discountAmount">-$0.00</span>
+                </div>
+                <div class="total-row tax">
+                    <span>Tax (<span id="taxPercent">8</span>%):</span>
+                    <span id="taxAmount">$0.00</span>
+                </div>
+                <div class="total-row final">
+                    <span>💰 TOTAL:</span>
+                    <span id="finalTotal">$0.00</span>
+                </div>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="payment-info">
+                <div class="payment-method">💳 <span id="paymentMethod">Cash</span></div>
+                <div class="payment-status">✅ Payment Successful</div>
+            </div>
+
+            <!-- Barcode -->
+            <div class="barcode">
+                <div class="barcode-lines"></div>
+                <div class="barcode-number" id="barcodeNumber">Loading...</div>
+            </div>
+
+            <!-- Warranty Info -->
+            <div class="warranty-info">
+                ⚠️ <strong>Return Policy:</strong> Items can be returned within 30 days with receipt. 
+                Electronics have a 1-year warranty. Terms and conditions apply.
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-section">
+            <div class="thank-you">🙏 Thank You for Your Business!</div>
+            <div class="footer-info">
+                Visit us again soon! Follow us on social media for deals and updates.<br>
+                📱 @POSSystem | 📘 Facebook.com/POSSystem<br>
+                🔄 This receipt is valid for returns and exchanges
+            </div>
+        </div>
+
+        <!-- Print Buttons -->
+        <div class="print-buttons">
+            <button class="print-btn primary" onclick="printReceipt()">🖨️ Print Receipt</button>
+            <button class="print-btn secondary" onclick="emailReceipt()">📧 Email Receipt</button>
+            <button class="print-btn secondary" onclick="downloadPDF()">📄 Download PDF</button>
+        </div>
+    </div>
+
+    <script>
+        let receiptData = null;
+
+        // Initialize receipt
+        document.addEventListener('DOMContentLoaded', function() {
+            loadReceiptData();
+        });
+
+        async function loadReceiptData() {
+            try {
+                // First try to get receipt data from the opener window
+                if (window.opener && window.opener.lastReceiptData) {
+                    receiptData = window.opener.lastReceiptData;
+                    populateReceipt(receiptData);
+                    return;
+                }
+                
+                // Try to get the last invoice data from the server
+                const lastInvoice = await new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(resolve)
+                        .withFailureHandler(reject)
+                        .getLastInvoiceData();
+                });
+                
+                if (lastInvoice) {
+                    receiptData = {
+                        receiptNumber: lastInvoice.invoiceNumber.replace('INV-', 'RCP-'),
+                        date: lastInvoice.date,
+                        cashier: lastInvoice.cashier,
+                        transactionId: 'TXN-' + Date.now().toString(36).toUpperCase(),
+                        customerName: lastInvoice.customerName,
+                        items: lastInvoice.items,
+                        total: lastInvoice.total,
+                        paymentMethod: lastInvoice.paymentMethod,
+                        // Calculate other values
+                        subtotal: lastInvoice.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0),
+                        discountPercent: 0,
+                        discountAmount: 0,
+                        taxPercent: 8,
+                        taxAmount: lastInvoice.total * 0.08 / 1.08 // Reverse calculate tax
+                    };
+                    populateReceipt(receiptData);
+                } else {
+                    showSampleReceipt();
+                }
+                
+            } catch (error) {
+                console.error('Error loading receipt data:', error);
+                showSampleReceipt();
+            }
+        }
+
+        function populateReceipt(data) {
+            try {
+                // Receipt Number (dynamic sequential)
+                document.getElementById('receiptNumber').textContent = data.receiptNumber || generateReceiptNumber();
+                
+                // Transaction Details
+                const now = new Date(data.date || Date.now());
+                document.getElementById('transactionDate').textContent = now.toLocaleDateString();
+                document.getElementById('transactionTime').textContent = now.toLocaleTimeString();
+                document.getElementById('cashierName').textContent = data.cashier || 'System';
+                document.getElementById('transactionId').textContent = data.transactionId || generateTransactionId();
+
+                // Customer
+                document.getElementById('customerName').textContent = data.customerName || 'Walk-in Customer';
+
+                // Items
+                populateItems(data.items || []);
+
+                // Totals
+                document.getElementById('subtotalAmount').textContent = '$' + (data.subtotal || 0).toFixed(2);
+                document.getElementById('discountPercent').textContent = data.discountPercent || 0;
+                document.getElementById('discountAmount').textContent = '-$' + (data.discountAmount || 0).toFixed(2);
+                document.getElementById('taxPercent').textContent = data.taxPercent || 8;
+                document.getElementById('taxAmount').textContent = '$' + (data.taxAmount || 0).toFixed(2);
+                document.getElementById('finalTotal').textContent = '$' + (data.total || 0).toFixed(2);
+
+                // Payment
+                document.getElementById('paymentMethod').textContent = data.paymentMethod || 'Cash';
+
+                // Barcode
+                document.getElementById('barcodeNumber').textContent = data.receiptNumber || generateReceiptNumber();
+
+            } catch (error) {
+                console.error('Error populating receipt:', error);
+                showSampleReceipt();
+            }
+        }
+
+        function populateItems(items) {
+            const tbody = document.getElementById('itemsTableBody');
+            let html = '';
+
+            if (!items || items.length === 0) {
+                html = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #666; font-style: italic;">
+                            No items found
+                        </td>
+                    </tr>
+                `;
+            } else {
+                items.forEach(item => {
+                    const total = (parseFloat(item.unitPrice) || 0) * (parseInt(item.quantity) || 0);
+                    html += `
+                        <tr>
+                            <td class="item-name">${item.productName || 'Unknown Item'}</td>
+                            <td class="item-qty">${item.quantity || 0}</td>
+                            <td class="item-price">$${(parseFloat(item.unitPrice) || 0).toFixed(2)}</td>
+                            <td class="item-total">$${total.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            tbody.innerHTML = html;
+        }
+
+        function generateReceiptNumber() {
+            const now = new Date();
+            const dateStr = now.getFullYear().toString() + 
+                           (now.getMonth() + 1).toString().padStart(2, '0') + 
+                           now.getDate().toString().padStart(2, '0');
+            const timeStr = now.getHours().toString().padStart(2, '0') + 
+                           now.getMinutes().toString().padStart(2, '0') + 
+                           now.getSeconds().toString().padStart(2, '0');
+            return `RCP-${dateStr}-${timeStr}`;
+        }
+
+        function generateTransactionId() {
+            return 'TXN-' + Date.now().toString(36).toUpperCase();
+        }
+
+        function showSampleReceipt() {
+            const sampleData = {
+                receiptNumber: generateReceiptNumber(),
+                date: Date.now(),
+                cashier: 'Demo Cashier',
+                transactionId: generateTransactionId(),
+                customerName: 'Sample Customer',
+                items: [
+                    {
+                        productName: 'Apple Juice',
+                        quantity: 2,
+                        unitPrice: 5.00
+                    },
+                    {
+                        productName: 'Sandwich',
+                        quantity: 1,
+                        unitPrice: 7.00
+                    }
+                ],
+                subtotal: 17.00,
+                discountPercent: 10,
+                discountAmount: 1.70,
+                taxPercent: 8,
+                taxAmount: 1.22,
+                total: 16.52,
+                paymentMethod: 'Card'
+            };
+            
+            populateReceipt(sampleData);
+        }
+
+        function printReceipt() {
+            window.print();
+        }
+
+        function emailReceipt() {
+            const customerEmail = prompt('Enter customer email address:');
+            if (customerEmail) {
+                // In a real implementation, this would call the Google Apps Script function
+                alert('📧 Receipt would be emailed to: ' + customerEmail);
+                // google.script.run.emailReceipt(receiptData, customerEmail);
+            }
+        }
+
+        function downloadPDF() {
+            // Create a simple PDF download (in real implementation, use a PDF library)
+            const content = document.querySelector('.receipt-container').outerHTML;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head><title>Receipt</title></head>
+                    <body onload="window.print(); window.close();">
+                        ${content}
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // Auto-print functionality for direct receipt printing
+        function autoPrint() {
+            setTimeout(() => {
+                window.print();
+            }, 1000);
+        }
+
+        // If opened as receipt window, auto-print
+        if (window.name === 'receiptWindow') {
+            autoPrint();
+        }
+    </script>
+</body>
+</html>

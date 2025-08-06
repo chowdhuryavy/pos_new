@@ -871,6 +871,9 @@
                 if (result.success) {
                     showMessage(result.message, 'success');
                     
+                    // Generate and show receipt
+                    generateReceipt(saleData, result.invoiceNumber, result.total);
+                    
                     // Clear cart and reset form
                     cart = [];
                     document.getElementById('customerName').value = '';
@@ -897,6 +900,186 @@
         function refreshProducts() {
             loadProducts();
             showMessage('Products refreshed', 'success');
+        }
+
+        function generateReceipt(saleData, invoiceNumber, total) {
+            // Calculate all the receipt data
+            const subtotal = cart.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+            const discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
+            const discountAmount = subtotal * (discountPercent / 100);
+            const afterDiscount = subtotal - discountAmount;
+            const taxAmount = afterDiscount * (taxRate / 100);
+            
+            const receiptData = {
+                receiptNumber: invoiceNumber.replace('INV-', 'RCP-'),
+                date: Date.now(),
+                cashier: 'Current User', // This would come from getCurrentUser in real implementation
+                transactionId: 'TXN-' + Date.now().toString(36).toUpperCase(),
+                customerName: saleData.customerName || 'Walk-in Customer',
+                items: cart.map(item => ({
+                    productName: item.productName,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice
+                })),
+                subtotal: subtotal,
+                discountPercent: discountPercent,
+                discountAmount: discountAmount,
+                taxPercent: taxRate,
+                taxAmount: taxAmount,
+                total: parseFloat(total),
+                paymentMethod: selectedPaymentMethod
+            };
+
+            // Store receipt data globally for the receipt window
+            window.lastReceiptData = receiptData;
+            
+            // Open receipt in a new window
+            const receiptWindow = window.open('', 'receiptWindow', 'width=450,height=800,scrollbars=yes');
+            
+            // Generate receipt HTML
+            const receiptHTML = generateReceiptHTML(receiptData);
+            receiptWindow.document.write(receiptHTML);
+            receiptWindow.document.close();
+            
+            // Auto-print the receipt after a short delay
+            setTimeout(() => {
+                receiptWindow.print();
+            }, 1000);
+        }
+
+        function generateReceiptHTML(data) {
+            let itemsHTML = '';
+            data.items.forEach(item => {
+                const total = item.quantity * item.unitPrice;
+                itemsHTML += `
+                    <tr>
+                        <td style="font-weight: bold;">${item.productName}</td>
+                        <td style="text-align: center;">${item.quantity}</td>
+                        <td style="text-align: right;">$${item.unitPrice.toFixed(2)}</td>
+                        <td style="text-align: right;">$${total.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            return `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>🧾 Receipt - ${data.receiptNumber}</title>
+                    <style>
+                        body { font-family: 'Courier New', monospace; max-width: 400px; margin: 0 auto; padding: 20px; }
+                        .header { text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+                        .store-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; }
+                        .receipt-number { text-align: center; padding: 15px; background: #f8f9fa; border: 2px dashed #667eea; border-radius: 8px; margin-bottom: 20px; }
+                        .receipt-number-value { font-size: 1.3rem; font-weight: bold; color: #667eea; }
+                        .details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; }
+                        .detail-item { text-align: center; }
+                        .detail-label { font-size: 0.7rem; color: #666; text-transform: uppercase; margin-bottom: 5px; }
+                        .detail-value { font-weight: bold; }
+                        .customer { text-align: center; padding: 10px; background: #e8f0fe; border-radius: 4px; margin-bottom: 20px; font-weight: bold; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        th { background: #f8f9fa; padding: 8px 5px; font-size: 0.7rem; text-transform: uppercase; border-bottom: 2px solid #667eea; }
+                        td { padding: 8px 5px; font-size: 0.8rem; border-bottom: 1px solid #eee; }
+                        .totals { border-top: 2px dashed #667eea; padding-top: 15px; margin-bottom: 20px; }
+                        .total-row { display: flex; justify-content: space-between; padding: 5px 0; }
+                        .total-final { font-size: 1.2rem; font-weight: bold; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; }
+                        .payment { text-align: center; padding: 15px; background: #e8f5e8; border-radius: 6px; margin-bottom: 20px; }
+                        .footer { text-align: center; padding: 15px; background: #f8f9fa; border-top: 2px dashed #667eea; }
+                        .barcode { text-align: center; margin: 15px 0; }
+                        .barcode-lines { display: inline-block; background: repeating-linear-gradient(90deg, #000 0px, #000 2px, transparent 2px, transparent 4px); height: 40px; width: 200px; margin-bottom: 5px; }
+                        @media print { body { padding: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <div class="store-name">🏪 POS SYSTEM</div>
+                        <div>Professional Point of Sale</div>
+                        <div style="font-size: 0.8rem; margin-top: 10px;">
+                            123 Business Street, Suite 100<br>
+                            📞 (555) 123-4567 | 📧 info@possystem.com
+                        </div>
+                    </div>
+
+                    <div class="receipt-number">
+                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 5px;">RECEIPT NUMBER</div>
+                        <div class="receipt-number-value">${data.receiptNumber}</div>
+                    </div>
+
+                    <div class="details">
+                        <div class="detail-item">
+                            <div class="detail-label">📅 Date</div>
+                            <div class="detail-value">${new Date(data.date).toLocaleDateString()}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">🕐 Time</div>
+                            <div class="detail-value">${new Date(data.date).toLocaleTimeString()}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">👤 Cashier</div>
+                            <div class="detail-value">${data.cashier}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">🆔 Transaction</div>
+                            <div class="detail-value">${data.transactionId}</div>
+                        </div>
+                    </div>
+
+                    <div class="customer">${data.customerName}</div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHTML}
+                        </tbody>
+                    </table>
+
+                    <div class="totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span>$${data.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="total-row" style="color: #e74c3c;">
+                            <span>Discount (${data.discountPercent}%):</span>
+                            <span>-$${data.discountAmount.toFixed(2)}</span>
+                        </div>
+                        <div class="total-row" style="color: #f39c12;">
+                            <span>Tax (${data.taxPercent}%):</span>
+                            <span>$${data.taxAmount.toFixed(2)}</span>
+                        </div>
+                        <div class="total-row total-final">
+                            <span>💰 TOTAL:</span>
+                            <span>$${data.total.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <div class="payment">
+                        <div style="font-weight: bold; color: #27ae60; margin-bottom: 5px;">💳 ${data.paymentMethod}</div>
+                        <div style="font-size: 0.8rem; color: #27ae60;">✅ PAYMENT SUCCESSFUL</div>
+                    </div>
+
+                    <div class="barcode">
+                        <div class="barcode-lines"></div>
+                        <div style="font-size: 0.7rem; letter-spacing: 2px;">${data.receiptNumber}</div>
+                    </div>
+
+                    <div class="footer">
+                        <div style="font-weight: bold; color: #667eea; margin-bottom: 10px;">🙏 Thank You for Your Business!</div>
+                        <div style="font-size: 0.7rem; color: #666;">
+                            Visit us again soon!<br>
+                            🔄 This receipt is valid for returns and exchanges<br>
+                            ⚠️ Return policy: 30 days with receipt
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
         }
 
         function showMessage(message, type) {

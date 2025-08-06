@@ -25,7 +25,10 @@ A fully functional, professional Point of Sale system built entirely with Google
 - Real-time calculations (subtotal, discount, tax)
 - Multiple payment methods (Cash, Card, UPI)
 - Stock validation and low-stock warnings
-- Automatic invoice generation
+- **Automatic invoice & receipt generation**
+- **Dynamic sequential numbering system**
+- **Professional receipt formatting with barcode**
+- **Auto-print functionality**
 
 ### 💰 **Advanced Financial Calculations**
 - Configurable tax rates
@@ -105,6 +108,7 @@ A fully functional, professional Point of Sale system built entirely with Google
    - `POS.html` (copy content from POS.html)
    - `Reports.html` (copy content from Reports.html)
    - `Logs.html` (copy content from Logs.html)
+   - `Receipt.html` (copy content from Receipt.html)
 
 ### **Step 4: Initialize System**
 1. Save all files in Apps Script

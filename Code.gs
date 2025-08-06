@@ -31,11 +31,14 @@ function onOpen() {
     .addItem('🔐 Login', 'showLoginDialog')
     .addItem('🏠 Dashboard', 'showDashboard')
     .addItem('🛒 Point of Sale', 'showPOSInterface')
+    .addItem('🧾 Show Receipt', 'showReceipt')
+    .addSeparator()
     .addItem('📊 Reports', 'showReports')
     .addItem('⚙️ Settings', 'showSettings')
+    .addItem('📋 View Logs', 'showLogs')
     .addSeparator()
     .addItem('🔧 Setup System', 'setupPOSSystem')
-    .addItem('📋 View Logs', 'showLogs')
+    .addItem('🚪 Logout', 'logout')
     .addToUi();
     
   // Hide all sheets except Login initially
@@ -386,7 +389,9 @@ function updateInventoryStock(productId, quantityChange) {
 function generateInvoice(saleData, saleItems, total, cashier) {
   var invoicesSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.INVOICES);
   var now = new Date();
-  var invoiceNumber = 'INV-' + Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyyMMdd') + '-' + (invoicesSheet.getLastRow());
+  
+  // Generate dynamic sequential invoice number
+  var invoiceNumber = generateSequentialInvoiceNumber();
   
   var productsText = saleItems.map(function(item) {
     return item.productName + ' (x' + item.quantity + ')';
@@ -403,6 +408,105 @@ function generateInvoice(saleData, saleItems, total, cashier) {
   ]);
   
   return invoiceNumber;
+}
+
+// Generate sequential invoice numbers with proper formatting
+function generateSequentialInvoiceNumber() {
+  var now = new Date();
+  var dateStr = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyyMMdd');
+  var timeStr = Utilities.formatDate(now, Session.getScriptTimeZone(), 'HHmmss');
+  
+  // Get sequence number from script properties
+  var properties = PropertiesService.getScriptProperties();
+  var todayKey = 'invoiceSeq_' + dateStr;
+  var sequence = parseInt(properties.getProperty(todayKey)) || 0;
+  sequence++;
+  
+  // Store updated sequence
+  properties.setProperty(todayKey, sequence.toString());
+  
+  // Format: INV-YYYYMMDD-HHMMSS-XXXX
+  var paddedSequence = sequence.toString().padStart(4, '0');
+  return 'INV-' + dateStr + '-' + timeStr + '-' + paddedSequence;
+}
+
+// Generate receipt number (similar to invoice but with RCP prefix)
+function generateReceiptNumber() {
+  var now = new Date();
+  var dateStr = Utilities.formatDate(now, Session.getScriptTimeZone(), 'yyyyMMdd');
+  var timeStr = Utilities.formatDate(now, Session.getScriptTimeZone(), 'HHmmss');
+  
+  var properties = PropertiesService.getScriptProperties();
+  var todayKey = 'receiptSeq_' + dateStr;
+  var sequence = parseInt(properties.getProperty(todayKey)) || 0;
+  sequence++;
+  
+  properties.setProperty(todayKey, sequence.toString());
+  
+  var paddedSequence = sequence.toString().padStart(4, '0');
+  return 'RCP-' + dateStr + '-' + timeStr + '-' + paddedSequence;
+}
+
+// Show receipt in new window
+function showReceipt() {
+  var currentUser = getCurrentUser();
+  if (!currentUser.email) {
+    showLoginDialog();
+    return;
+  }
+  
+  var htmlOutput = HtmlService.createTemplateFromFile('Receipt')
+    .evaluate()
+    .setWidth(450)
+    .setHeight(800)
+    .setTitle('🧾 Receipt');
+  SpreadsheetApp.getUi().showModelessDialog(htmlOutput, '🧾 Receipt');
+}
+
+// Get the last invoice for receipt generation
+function getLastInvoiceData() {
+  try {
+    var invoicesSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.INVOICES);
+    if (!invoicesSheet) return null;
+    
+    var lastRow = invoicesSheet.getLastRow();
+    if (lastRow <= 1) return null; // No invoices
+    
+    var invoiceData = invoicesSheet.getRange(lastRow, 1, 1, 7).getValues()[0];
+    var salesSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAMES.SALES);
+    
+    // Get sales items for this invoice (you'd need to match by timestamp or invoice number)
+    var salesData = salesSheet.getDataRange().getValues();
+    var invoiceDate = new Date(invoiceData[1]);
+    var relatedSales = [];
+    
+    // Find sales within a reasonable timeframe of the invoice
+    for (var i = salesData.length - 1; i >= 1; i--) {
+      var saleDate = new Date(salesData[i][0]);
+      var timeDiff = Math.abs(invoiceDate.getTime() - saleDate.getTime());
+      if (timeDiff < 60000) { // Within 1 minute
+        relatedSales.push({
+          productName: salesData[i][1],
+          quantity: salesData[i][3],
+          unitPrice: parseFloat(salesData[i][4])
+        });
+      }
+    }
+    
+    return {
+      invoiceNumber: invoiceData[0],
+      date: invoiceDate.getTime(),
+      customerName: invoiceData[2],
+      total: parseFloat(invoiceData[4].replace('$', '')),
+      paymentMethod: invoiceData[5],
+      cashier: invoiceData[6],
+      items: relatedSales
+    };
+    
+  } catch (error) {
+    Logger.log('Error getting last invoice: ' + error.message);
+    return null;
+  }
 }
 
 // ⚙️ Settings Functions
